@@ -1,0 +1,37 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Ramassage</title><link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>🌿 DoualaClean</h1>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="abonnement.html">Abonnement</a>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </nav>
+</header>
+<div class="form-card">
+  <h2>🚛 Service de ramassage à domicile</h2>
+  <label>📍 Adresse complète *</label>
+  <input type="text" id="adresse" placeholder="Ex: Rue de la Joie, Makepe, Douala" required>
+
+  <label>Description du domicile</label>
+  <textarea id="descDomicile" placeholder="Repère, étage, couleur de la porte…"></textarea>
+
+  <label>📦 Fréquence de ramassage *</label>
+  <div class="ram-option" onclick="selectRam(this, 2000)">
+    🗑️ <strong>1 fois / semaine</strong> — 2 000 FCFA
+  </div>
+  <div class="ram-option" onclick="selectRam(this, 3000)">
+    🚛 <strong>2 fois / semaine</strong> — 3 000 FCFA
+  </div>
+  <p id="planLabel" style="color:#2e7d32;font-weight:600;margin-bottom:16px"></p>
+
+  <label>💳 Numéro Orange Money *</label>
+  <input type="tel" id="phonePay" placeholder="6XXXXXXXX (9 chiffres, commence par 6)">
+
+  <button class="btn btn-primary btn-full" id="btnPayer" onclick="payerRamassage()">💳 Payer maintenant</button>
+  <div class="success-box" id="successBox"></div>
+</div>
+<script src="js/app.js"></script>
+</body></html>

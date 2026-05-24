@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Gestion Utilisateurs</title><link rel="stylesheet" href="style.css">
+</head><body>
+<div class="dash-layout">
+  <aside class="sidebar">
+    <div class="logo">🌿 DoualaClean</div>
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="signalement.html">📝 Signalement</a>
+    <a href="carte.html">📍 Carte</a>
+    <a href="statistic.html">📈 Statistiques</a>
+    <a href="admin-users.html" class="active">👥 Utilisateurs</a>
+    <a href="param.html">⚙️ Paramètres</a>
+    <a href="#" onclick="doLogout();return false;" style="margin-top:auto;opacity:.8">🚪 Déconnexion</a>
+  </aside>
+  <main class="dash-main">
+    <div class="dash-topbar">
+      <h1>👥 Gestion des Utilisateurs</h1>
+      <span class="user-pill" id="userPill"></span>
+    </div>
+
+    <!-- Créer un agent -->
+    <div class="table-section" style="margin-bottom:24px">
+      <h2>➕ Créer un agent / admin</h2>
+      <form id="agentForm" onsubmit="creerAgent(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div>
+          <label style="font-size:.84rem;font-weight:600;color:#444">Nom</label>
+          <input type="text" id="agentNom" placeholder="Nom complet" required style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:7px;margin-top:4px">
+        </div>
+        <div>
+          <label style="font-size:.84rem;font-weight:600;color:#444">Email</label>
+          <input type="email" id="agentEmail" placeholder="email@doualaclean.cm" required style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:7px;margin-top:4px">
+        </div>
+        <div>
+          <label style="font-size:.84rem;font-weight:600;color:#444">Mot de passe</label>
+          <input type="password" id="agentPassword" placeholder="Min. 6 caractères" required style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:7px;margin-top:4px">
+        </div>
+        <div>
+          <label style="font-size:.84rem;font-weight:600;color:#444">Rôle</label>
+          <select id="agentRole" style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:7px;margin-top:4px">
+            <option value="agent">Agent</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.84rem;font-weight:600;color:#444">Téléphone</label>
+          <input type="tel" id="agentPhone" placeholder="6XXXXXXXX" style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:7px;margin-top:4px">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button type="submit" class="btn btn-primary">Créer l'utilisateur</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="table-section">
+      <h2>Liste des utilisateurs</h2>
+      <div class="filter-bar">
+        <input type="text" id="searchUser" placeholder="Rechercher…" oninput="loadUsers(this.value, document.getElementById('filtreRole').value)">
+        <select id="filtreRole" onchange="loadUsers(document.getElementById('searchUser').value, this.value)">
+          <option value="">Tous les rôles</option>
+          <option value="citoyen">Citoyens</option>
+          <option value="agent">Agents</option>
+          <option value="admin">Admins</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Nom</th><th>Email</th><th>Rôle</th><th>Abonnement</th>
+          <th>Téléphone</th><th>Signalements</th><th>Statut</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script src="js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const u = JSON.parse(localStorage.getItem('dc_user') || 'null');
+  const pill = document.getElementById('userPill');
+  if (pill && u) pill.textContent = `👤 ${u.nom} — ${u.role}`;
+});
+</script>
+</body></html>

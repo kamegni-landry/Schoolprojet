@@ -1,0 +1,474 @@
+{
+  "info": {
+    "_postman_id": "doualaclean-ussd-payment",
+    "name": "DoualaClean USSD & Payment APIs",
+    "description": "Collection complète pour tester les APIs USSD et Paiement de DoualaClean",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔧 Setup",
+      "item": [
+        {
+          "name": "Set Variables",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.environment.set('base_url', 'http://localhost:8000/api');",
+                  "pm.environment.set('ngrok_url', 'https://your-ngrok-url.com/api');",
+                  "pm.environment.set('phone', '+237670000000');",
+                  "pm.environment.set('session_id', 'session-' + Date.now());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/payments/plans"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 USSD API",
+      "item": [
+        {
+          "name": "1. Menu Principal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "2. Signalement - Menu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "3. Signalement - Choisir Quartier",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "1*1",
+                  "description": "1 = Signalement, 1 = Akwa"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "4. Signalement - Choisir Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "1*1*1",
+                  "description": "1 = Akwa, 1 = Ordures"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "5. Suivi - Menu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}-suivi",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "6. Suivi - Entrer Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}-suivi",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "2*SIG-2026-0001",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "7. Ramassage - Menu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}-ramassage",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        },
+        {
+          "name": "8. Abonnement - Menu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "sessionId",
+                  "value": "{{session_id}}-abonnement",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "{{phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "4",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceCode",
+                  "value": "123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{ngrok_url}}/ussd"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Payment API",
+      "item": [
+        {
+          "name": "1. Obtenir les plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/payments/plans"
+          }
+        },
+        {
+          "name": "2. Initier un paiement (AUTH)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_TOKEN_HERE"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"standard\",\n  \"phone_number\": \"{{phone}}\"\n}"
+            },
+            "url": "{{base_url}}/payments/subscribe"
+          }
+        },
+        {
+          "name": "3. Vérifier le statut",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/payments/TXN-2026-00001/status"
+          }
+        },
+        {
+          "name": "4. Historique des paiements (AUTH)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_TOKEN_HERE"
+              }
+            ],
+            "url": "{{base_url}}/payments/history"
+          }
+        },
+        {
+          "name": "5. Détail d'une transaction (AUTH)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_TOKEN_HERE"
+              }
+            ],
+            "url": "{{base_url}}/payments/1"
+          }
+        },
+        {
+          "name": "6. Rembourser (AUTH)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_TOKEN_HERE"
+              }
+            ],
+            "url": "{{base_url}}/payments/1/refund"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 Webhooks",
+      "item": [
+        {
+          "name": "Webhook Paiement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"TXN-2026-00001\",\n  \"status\": \"completed\",\n  \"amount\": 2000,\n  \"transactionId\": \"ABC123456\"\n}"
+            },
+            "url": "{{base_url}}/payments/webhook"
+          }
+        },
+        {
+          "name": "Webhook Callback USSD",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Success\",\n  \"transactionId\": \"ABC123456\",\n  \"amount\": 2000,\n  \"phoneNumber\": \"{{phone}}\"\n}"
+            },
+            "url": "{{base_url}}/ussd/payment/callback"
+          }
+        }
+      ]
+    }
+  ]
+}

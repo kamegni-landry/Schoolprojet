@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Abonnement</title><link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>🌿 DoualaClean</h1>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="ramassage.html">Ramassage</a>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </nav>
+</header>
+<div style="text-align:center;padding:32px 16px 0">
+  <h2 style="color:#2e7d32;font-size:1.8rem">💳 Abonnements</h2>
+  <p style="color:#666;margin-top:8px">Choisissez l'offre qui vous convient</p>
+  <p id="planActuel" style="margin-top:8px;color:#2e7d32;font-weight:600"></p>
+</div>
+<div class="plans-grid">
+  <div class="plan-card">
+    <h3>Basique</h3>
+    <div class="price">Gratuit</div>
+    <ul>
+      <li>✔ Signalement simple</li>
+      <li>✔ Accès à la carte</li>
+      <li>✖ Historique personnel</li>
+      <li>✖ Statistiques avancées</li>
+    </ul>
+    <button class="btn btn-primary btn-full" onclick="subscribe('basique')">Choisir Basique</button>
+  </div>
+  <div class="plan-card featured">
+    <h3>Standard</h3>
+    <div class="price">2 000 FCFA<small style="font-size:.8rem">/mois</small></div>
+    <ul>
+      <li>✔ Signalement avec photo</li>
+      <li>✔ Historique personnel</li>
+      <li>✔ Notifications</li>
+      <li>✖ Statistiques avancées</li>
+    </ul>
+    <button class="btn btn-primary btn-full" onclick="subscribe('standard')">Choisir Standard</button>
+  </div>
+  <div class="plan-card">
+    <h3>Premium</h3>
+    <div class="price">5 000 FCFA<small style="font-size:.8rem">/mois</small></div>
+    <ul>
+      <li>✔ Tout Standard</li>
+      <li>✔ Statistiques avancées</li>
+      <li>✔ Support prioritaire</li>
+      <li>✔ Ramassage prioritaire</li>
+    </ul>
+    <button class="btn btn-primary btn-full" onclick="subscribe('premium')">Choisir Premium</button>
+  </div>
+</div>
+<script src="js/app.js"></script>
+</body></html>

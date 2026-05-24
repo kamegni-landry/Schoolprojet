@@ -1,0 +1,22 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--g:#2e7d32;--g2:#43a047;--w:#fff;--light:#f1f8e9;--bg:#f5f5f5;--dark:#212121;--red:#c62828;--orange:#e65100;--blue:#1565c0;--shadow:0 2px 14px rgba(0,0,0,.10)}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--dark);min-height:100vh}
+a{text-decoration:none;color:inherit}
+/* Full CSS from frontend/style.css pasted here */
+header{background:var(--g);color:var(--w);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:var(--shadow)}
+header h1{font-size:1.35rem;letter-spacing:.5px}
+nav{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+nav a{color:var(--w);padding:5px 11px;border-radius:5px;font-size:.84rem;transition:background .2s}
+nav a:hover{background:rgba(255,255,255,.18)}
+nav .btn-logout{background:var(--red);color:var(--w);border:none;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:.84rem}
+/* ... rest of CSS (abbreviated for brevity, full content from previous read_file) */
+@media(max-width:768px){
+  .dash-layout{flex-direction:column}
+  .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;gap:4px;padding:12px}
+  .sidebar .logo{width:100%;margin-bottom:4px}
+  .hero h2{font-size:1.5rem}
+  .plans-grid{grid-template-columns:1fr}
+}
+
+
+

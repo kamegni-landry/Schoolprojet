@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Signalement</title><link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>🌿 DoualaClean</h1>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="carte.html">Carte</a>
+    <a href="abonnement.html">Abonnement</a>
+    <a href="param.html">Profil</a>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </nav>
+</header>
+<div class="form-card">
+  <h2>🚮 Signaler un dépôt d'ordures</h2>
+  <form id="signalForm">
+    <label>Lieu du dépôt *</label>
+    <input type="text" id="lieu" placeholder="Ex: Marché Central de Douala" required>
+
+    <label>Description</label>
+    <textarea id="description" placeholder="Décrivez la situation (taille, odeur, dangerosité…)"></textarea>
+
+    <label>Type de déchets *</label>
+    <select id="type_dechet" required>
+      <option value="">-- Choisir le type --</option>
+      <option value="Ménagers">Ménagers</option>
+      <option value="Plastiques">Plastiques</option>
+      <option value="Dangereux">Dangereux</option>
+    </select>
+
+    <label>Quartier *</label>
+    <select id="quartier" required>
+      <option value="">-- Choisir le quartier --</option>
+      <option>Akwa</option><option>Bonanjo</option><option>Deido</option>
+      <option>Bépanda</option><option>New-Bell</option><option>Ndogbong</option>
+      <option>Logbaba</option>
+    </select>
+
+    <label>Photo du dépôt (optionnel)</label>
+    <input type="file" id="photo" accept="image/jpeg,image/png,image/jpg,image/webp" capture="environment">
+
+    <button type="submit" class="btn btn-primary btn-full">📤 Envoyer le signalement</button>
+  </form>
+</div>
+<script src="js/app.js"></script>
+</body></html>
