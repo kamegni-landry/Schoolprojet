@@ -6,6 +6,8 @@ use App\Http\Controllers\SignalementController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\RamassageController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SimulationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/profile',   [AuthController::class, 'updateProfile']);
         Route::put('/password',  [AuthController::class, 'changePassword']);
     });
+
+    // ──────────────────────────────────────────────
+    // SIMULATION (Orange/Mobile Money + USSD)
+    // ──────────────────────────────────────────────
+    Route::post('/simulate/payments', [\App\Http\Controllers\SimulationController::class, 'simulatePayment']);
+
 
     // Signalements — routes statiques EN PREMIER pour éviter {id} de les capturer
     Route::get('/signalements/stats/globales',    [SignalementController::class, 'stats']);

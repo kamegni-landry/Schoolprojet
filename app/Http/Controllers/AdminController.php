@@ -11,7 +11,6 @@ use Illuminate\Validation\Rules\Password;
 
 use Illuminate\Routing\Controller as BaseController;
 
-use App\Models\Signalement;
 
 class AdminController extends BaseController
 {
