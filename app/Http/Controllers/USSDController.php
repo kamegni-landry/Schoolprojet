@@ -240,6 +240,15 @@ Créé: {$signalement->created_at->format('d/m/Y')}";
                 return 'END Fréquence invalide ❌';
             }
 
+            // Vérifier si l'utilisateur a déjà un service ramassage actif (aligné avec RamassageController)
+            $existant = \App\Models\Ramassage::where('user_id', $session->user_id)
+                ->where('statut', 'actif')
+                ->first();
+
+            if ($existant) {
+                return 'END Vous avez déjà un service de ramassage actif ❗';
+            }
+
             // simulation paiement + création ramassage
             $reference = 'OM-' . strtoupper(uniqid());
 
@@ -252,8 +261,11 @@ Créé: {$signalement->created_at->format('d/m/Y')}";
                 'phone_paiement' => $text,
                 'statut_paiement' => 'paye',
                 'reference_paiement' => $reference,
+                'latitude' => null,
+                'longitude' => null,
                 'statut' => 'actif',
             ]);
+
 
             // reset step
             $session->data = [];
