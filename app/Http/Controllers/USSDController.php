@@ -177,26 +177,91 @@ Créé: {$signalement->created_at->format('d/m/Y')}";
         }
 
         // ──────────────────────────────────────────
-        // RAMASSAGE
+        // RAMASSAGE (USSD complet simulé: adresse, description, fréquence, phone_paiement)
         // ──────────────────────────────────────────
         if ($text === '3') {
-            return 'CON Choisissez la fréquence:
-
-1. Hebdomadaire
-2. Bi-hebdomadaire
-3. Mensuel';
-        }
-
-        if (preg_match('/^3\*(\d+)$/', $text, $matches)) {
-            $frequences = [1 => 'Hebdomadaire', 2 => 'Bi-hebdomadaire', 3 => 'Mensuel'];
-            $frequence = $frequences[$matches[1]] ?? 'Mensuel';
-
-            $session->data = ['frequence' => $frequence];
+            $session->data = ['ramassage_step' => 'frequence'];
             $session->save();
 
-            return "END Service de ramassage: {$frequence}
-Vous serez contacté bientôt ✅";
+            return 'CON Choisissez la fréquence:\r\n\r\n1. 1 fois / semaine (2000 FCFA)\r\n2. 2 fois / semaine (3000 FCFA)';
         }
+
+        // 3*1 ou 3*2 => fréquence
+        if (preg_match('/^3\*(\d+)$/', $text, $matches)) {
+            $freqMap = [1 => '1_semaine', 2 => '2_semaine'];
+            $frequence = $freqMap[(int)$matches[1]] ?? null;
+
+            if (!$frequence) {
+                return 'END Option de fréquence invalide ❌';
+            }
+
+            $session->data = array_merge($session->data ?? [], [
+                'frequence' => $frequence,
+                'ramassage_step' => 'adresse',
+            ]);
+            $session->save();
+
+            return 'CON Entrez votre adresse complète:';
+        }
+
+        // adresse (texte libre): ramassage_step=adresse
+        if (($session->data['ramassage_step'] ?? null) === 'adresse' && preg_match('/^[0-9A-Za-z].*/', $text)) {
+            $session->data = array_merge($session->data ?? [], ['adresse' => $text, 'ramassage_step' => 'desc']);
+            $session->save();
+            return 'CON Description du domicile (optionnel). Si rien, tape 0:';
+        }
+
+        // description: si 0 => null
+        if (($session->data['ramassage_step'] ?? null) === 'desc') {
+            $desc = ($text === '0') ? null : $text;
+            $session->data = array_merge($session->data ?? [], ['description_domicile' => $desc, 'ramassage_step' => 'phone']);
+            $session->save();
+            return 'CON Numéro Orange Money (ex: 670000000) :';
+        }
+
+        // phone validation (cameroon starting with 6, 9 digits)
+        if (($session->data['ramassage_step'] ?? null) === 'phone') {
+            // attendu: digits 6xxxxxxxx (9 chiffres)
+            if (!preg_match('/^6[0-9]{8}$/', $text)) {
+                return 'CON Numéro invalide. Réessayez (ex: 670000000) :';
+            }
+
+            $freq = $session->data['frequence'] ?? null;
+            $adresse = $session->data['adresse'] ?? null;
+            $desc = $session->data['description_domicile'] ?? null;
+
+            if (!$freq || !$adresse) {
+                return 'END Session ramassage invalide ❌';
+            }
+
+            $tarifs = \App\Models\Ramassage::$tarifs;
+            $prix = $tarifs[$freq] ?? 0;
+            if ($prix <= 0) {
+                return 'END Fréquence invalide ❌';
+            }
+
+            // simulation paiement + création ramassage
+            $reference = 'OM-' . strtoupper(uniqid());
+
+            \App\Models\Ramassage::create([
+                'user_id' => $session->user_id,
+                'adresse' => $adresse,
+                'description_domicile' => $desc,
+                'frequence' => $freq,
+                'prix' => $prix,
+                'phone_paiement' => $text,
+                'statut_paiement' => 'paye',
+                'reference_paiement' => $reference,
+                'statut' => 'actif',
+            ]);
+
+            // reset step
+            $session->data = [];
+            $session->save();
+
+            return "END Ramassage activé ✅\r\nREF Paiement: {$reference}\r\nPrix: {$prix} FCFA";
+        }
+
 
         // ──────────────────────────────────────────
         // ABONNEMENTS
