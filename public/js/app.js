@@ -766,6 +766,101 @@ async function creerAgent(e) {
 }
 
 /***********************************************
+ * MOT DE PASSE OUBLIÉ / RÉINITIALISATION
+ ***********************************************/
+let _resetEmail = '';
+
+function copyToken() {
+  const t = document.getElementById('tokenDisplay').textContent;
+  navigator.clipboard?.writeText(t).then(() => toast('Token copié !'));
+}
+
+function initForgotPassword() {
+  const forgotForm = document.getElementById('forgotForm');
+  const resetForm  = document.getElementById('resetForm');
+
+  forgotForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('emailInput').value.trim();
+    const btn   = forgotForm.querySelector('button[type=submit]');
+    const errEl = document.getElementById('errMsg');
+    const okEl  = document.getElementById('successMsg');
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+    btn.innerHTML = '<span class="loading"></span>'; btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${API}/auth/forgot-password`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body:    JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errEl.textContent = data.message || 'Erreur'; errEl.style.display = 'block';
+        btn.innerHTML = 'Envoyer le lien'; btn.disabled = false;
+        return;
+      }
+
+      _resetEmail = email;
+
+      document.getElementById('stepRequest').style.display = 'none';
+      document.getElementById('stepToken').style.display   = 'block';
+      okEl.textContent = data.message; okEl.style.display = 'block';
+
+      if (data.reset_token) {
+        document.getElementById('devTokenBox').style.display = 'block';
+        document.getElementById('tokenDisplay').textContent  = data.reset_token;
+        document.getElementById('tokenInput').value          = data.reset_token;
+      }
+    } catch {
+      errEl.textContent = '❌ Serveur inaccessible.'; errEl.style.display = 'block';
+      btn.innerHTML = 'Envoyer le lien'; btn.disabled = false;
+    }
+  });
+
+  resetForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token   = document.getElementById('tokenInput').value.trim();
+    const pwd     = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const errEl   = document.getElementById('errMsg');
+    const okEl    = document.getElementById('successMsg');
+    errEl.style.display = 'none'; okEl.style.display = 'none';
+
+    if (pwd !== confirm) {
+      errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.style.display = 'block'; return;
+    }
+
+    const btn = resetForm.querySelector('button[type=submit]');
+    btn.innerHTML = '<span class="loading"></span>'; btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${API}/auth/reset-password`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body:    JSON.stringify({ email: _resetEmail, token, password: pwd, password_confirmation: confirm }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errEl.textContent = data.message || 'Token invalide.'; errEl.style.display = 'block';
+        btn.innerHTML = 'Réinitialiser le mot de passe'; btn.disabled = false;
+        return;
+      }
+
+      okEl.textContent = '✅ ' + data.message; okEl.style.display = 'block';
+      resetForm.style.display = 'none';
+      setTimeout(() => go('login.html'), 2500);
+    } catch {
+      errEl.textContent = '❌ Serveur inaccessible.'; errEl.style.display = 'block';
+      btn.innerHTML = 'Réinitialiser le mot de passe'; btn.disabled = false;
+    }
+  });
+}
+
+/***********************************************
  * INIT GLOBAL — détecte la page et lance la bonne fonction
  ***********************************************/
 document.addEventListener('DOMContentLoaded', () => {
@@ -776,16 +871,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   switch (page) {
     case '':
-    case 'index.html':      initIndex(); break;
+    case 'index.html':           initIndex(); break;
     case 'login.html':
-    case 'login-user.html': document.getElementById('loginForm')?.addEventListener('submit', doLogin); break;
-    case 'register.html':   document.getElementById('registerForm')?.addEventListener('submit', doRegister); break;
-    case 'signalement.html':initSignalement(); break;
-    case 'dashboard.html':  initDashboard(); break;
-    case 'carte.html':      initCarte(); break;
-    case 'abonnement.html': initAbonnement(); break;
-    case 'statistic.html':  initStatistiques(); break;
-    case 'param.html':      initParam(); break;
-    case 'admin-users.html':initAdminUsers(); break;
+    case 'login-user.html':      document.getElementById('loginForm')?.addEventListener('submit', doLogin); break;
+    case 'register.html':        document.getElementById('registerForm')?.addEventListener('submit', doRegister); break;
+    case 'forgot-password.html': initForgotPassword(); break;
+    case 'signalement.html':     initSignalement(); break;
+    case 'dashboard.html':       initDashboard(); break;
+    case 'carte.html':           initCarte(); break;
+    case 'abonnement.html':      initAbonnement(); break;
+    case 'statistic.html':       initStatistiques(); break;
+    case 'param.html':           initParam(); break;
+    case 'admin-users.html':     initAdminUsers(); break;
   }
 });

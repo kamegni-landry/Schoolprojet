@@ -6,7 +6,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -169,6 +171,85 @@ class AuthController extends BaseController
         return response()->json([
             'message' => 'Mot de passe modifié avec succès',
         ]);
+    }
+
+    /**
+     * POST /api/auth/forgot-password
+     * Génère un token de réinitialisation et l'envoie par email (log en dev)
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Si cet email existe, un lien de réinitialisation a été envoyé.',
+            ]);
+        }
+
+        $token = Str::random(64);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
+
+        \Illuminate\Support\Facades\Log::info('DoualaClean — Reset password', [
+            'email' => $request->email,
+            'token' => $token,
+        ]);
+
+        $response = [
+            'message'     => 'Lien de réinitialisation généré avec succès.',
+            'reset_token' => $token,
+            'notice'      => 'Token inclus directement (pas de serveur email configuré). Copiez-le pour réinitialiser votre mot de passe.',
+        ];
+
+        return response()->json($response);
+    }
+
+    /**
+     * POST /api/auth/reset-password
+     * Réinitialise le mot de passe avec le token
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email'                 => 'required|email',
+            'token'                 => 'required|string',
+            'password'              => ['required', 'confirmed', Password::min(6)],
+        ]);
+
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Token invalide ou expiré.'], 422);
+        }
+
+        if (now()->diffInMinutes($record->created_at) > 60) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json(['message' => 'Token expiré. Demandez un nouveau lien.'], 422);
+        }
+
+        if (!Hash::check($request->token, $record->token)) {
+            return response()->json(['message' => 'Token invalide.'], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+        $user->tokens()->delete();
+
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Mot de passe réinitialisé avec succès. Vous pouvez vous connecter.']);
     }
 
     // Helper formatage user
