@@ -40,6 +40,50 @@ function toast(msg, type = 'success') {
 /* ─── Redirect ─── */
 const go = page => { window.location.href = page; };
 
+/* ─── Responsive menu ─── */
+function initHamburgerMenu() {
+  document.querySelectorAll('header').forEach(header => {
+    const nav = header.querySelector('nav');
+    if (!nav || header.querySelector('.menu-toggle')) return;
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'menu-toggle';
+    toggle.setAttribute('aria-label', 'Ouvrir le menu');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<span></span><span></span><span></span>';
+
+    toggle.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      toggle.classList.toggle('active', isOpen);
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    header.insertBefore(toggle, nav);
+  });
+
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar && !document.querySelector('.sidebar-toggle')) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'sidebar-toggle';
+    toggle.setAttribute('aria-label', 'Ouvrir la navigation');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<span></span><span></span><span></span>';
+
+    toggle.addEventListener('click', () => {
+      const isOpen = sidebar.classList.toggle('open');
+      toggle.classList.toggle('active', isOpen);
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    const anchor = document.querySelector('.dash-topbar') || document.querySelector('.dash-main');
+    if (anchor) {
+      anchor.parentNode.insertBefore(toggle, anchor);
+    }
+  }
+}
+
 /* ─── Protect page ─── */
 function requireAuth() {
   if (!getToken()) { go('login.html'); return false; }
@@ -68,6 +112,8 @@ function animCount(el, target) {
     if (cur >= target) clearInterval(t);
   }, 25);
 }
+
+initHamburgerMenu();
 
 /***********************************************
  * AUTH
