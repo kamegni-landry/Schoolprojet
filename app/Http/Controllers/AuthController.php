@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Routing\Controller as BaseController;
@@ -196,18 +199,33 @@ class AuthController extends BaseController
             ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        \Illuminate\Support\Facades\Log::info('DoualaClean — Reset password', [
-            'email' => $request->email,
-            'token' => $token,
-        ]);
+        $mailer = config('mail.default', 'log');
 
-        $response = [
+        if ($mailer !== 'log' && $mailer !== 'array') {
+            // Real email configured — send and do NOT expose token in API
+            try {
+                Mail::to($request->email)->send(new ResetPasswordMail($request->email, $token));
+
+                return response()->json([
+                    'message' => 'Un email de réinitialisation a été envoyé à ' . $request->email . '. Vérifiez votre boîte de réception.',
+                ]);
+            } catch (\Exception $e) {
+                Log::error('DoualaClean — Mail send failed', [
+                    'email' => $request->email,
+                    'error' => $e->getMessage(),
+                ]);
+                // Fall through to token-in-response fallback
+            }
+        }
+
+        // No email configured (or send failed) — return token directly
+        Log::info('DoualaClean — Reset password token (no email)', ['email' => $request->email]);
+
+        return response()->json([
             'message'     => 'Lien de réinitialisation généré avec succès.',
             'reset_token' => $token,
-            'notice'      => 'Token inclus directement (pas de serveur email configuré). Copiez-le pour réinitialiser votre mot de passe.',
-        ];
-
-        return response()->json($response);
+            'notice'      => 'Token inclus directement (configurez MAIL_MAILER=smtp pour envoyer par email).',
+        ]);
     }
 
     /**

@@ -336,6 +336,83 @@ Créé: {$signalement->created_at->format('d/m/Y')}";
 3. Retour';
         }
 
+        // 5*1 → Payer abonnement — choisir le plan
+        if ($text === '5*1') {
+            return 'CON Choisissez votre plan:
+
+1. Standard - 2000 XAF
+2. Premium  - 5000 XAF';
+        }
+
+        // 5*1*1 ou 5*1*2 → plan choisi → choisir opérateur
+        if (preg_match('/^5\*1\*([12])$/', $text, $matches)) {
+            $plans = [1 => ['nom' => 'Standard', 'prix' => 2000], 2 => ['nom' => 'Premium', 'prix' => 5000]];
+            $plan  = $plans[(int)$matches[1]];
+            $session->data = array_merge($session->data ?? [], ['pay_plan' => $plan['nom'], 'pay_prix' => $plan['prix']]);
+            $session->save();
+            return "CON Payer {$plan['nom']} ({$plan['prix']} XAF)\r\nChoisissez votre opérateur:\r\n\r\n1. MTN Mobile Money\r\n2. Orange Money";
+        }
+
+        // 5*1*{plan}*{operateur} → confirmation
+        if (preg_match('/^5\*1\*[12]\*([12])$/', $text, $matches)) {
+            $data = $session->data ?? [];
+            $op   = $matches[1] === '1' ? 'MTN' : 'Orange';
+            $plan = $data['pay_plan'] ?? 'Standard';
+            $prix = $data['pay_prix'] ?? 2000;
+
+            // Créer l'abonnement simulé
+            $reference = strtoupper($op[0]) . 'M-' . strtoupper(uniqid());
+            \App\Models\Abonnement::updateOrCreate(
+                ['user_id' => $session->user_id],
+                [
+                    'plan'                => strtolower($plan),
+                    'statut'              => 'actif',
+                    'date_debut'          => now(),
+                    'date_fin'            => now()->addMonth(),
+                    'montant'             => $prix,
+                    'methode_paiement'    => strtolower($op) . '_money',
+                    'reference_paiement'  => $reference,
+                ]
+            );
+
+            $session->data = [];
+            $session->save();
+
+            return "END Abonnement {$plan} activé ✅\r\nOpérateur: {$op} Money\r\nRéf: {$reference}\r\nMontant: {$prix} XAF";
+        }
+
+        // 5*2 → Historique des paiements
+        if ($text === '5*2') {
+            $transactions = \App\Models\Transaction::where('phone_number', $session->phone_number)
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get();
+
+            if ($transactions->isEmpty()) {
+                return 'END Aucun paiement trouvé pour ce numéro.';
+            }
+
+            $lines = "END Vos 3 derniers paiements:\r\n";
+            foreach ($transactions as $tx) {
+                $date   = \Carbon\Carbon::parse($tx->created_at)->format('d/m');
+                $status = $tx->status === 'completed' ? '✅' : '❌';
+                $lines .= "\r\n{$date} {$tx->amount} XAF {$status}";
+            }
+            return $lines;
+        }
+
+        // 5*3 → Retour menu principal
+        if ($text === '5*3') {
+            return 'CON Bienvenue sur DoualaClean
+
+1. Signaler un problème
+2. Suivre mon signalement
+3. Demander un ramassage
+4. Abonnements
+5. Paiements
+6. Quitter';
+        }
+
         // Quitter
         if ($text === '6') {
             return 'END Merci d\'avoir utilisé DoualaClean! 👋';
@@ -383,15 +460,28 @@ Créé: {$signalement->created_at->format('d/m/Y')}";
     }
 
     /**
-     * Détecter l'opérateur (MTN ou Orange)
+     * Détecter l'opérateur (MTN ou Orange) pour les numéros camerounais.
+     * Format attendu : +237XXXXXXXXX
+     *
+     * MTN Cameroon  : 650-659, 670-679, 680-689
+     * Orange Cameroon : 655-659 (partagé), 690-699
      */
     protected function detectOperator($phone) {
-        // Extraire les 3 premiers chiffres après +237
-        $code = substr($phone, 4, 3);
+        // Supprimer le préfixe pays pour obtenir le numéro local
+        $local = preg_replace('/^\+237/', '', $phone);
+        $prefix3 = (int) substr($local, 0, 3);
 
-        if (in_array($code, ['650', '651', '652', '653', '654', '655', '656', '657', '658', '659'])) {
+        // MTN Cameroon
+        if (
+            ($prefix3 >= 650 && $prefix3 <= 659) ||
+            ($prefix3 >= 670 && $prefix3 <= 679) ||
+            ($prefix3 >= 680 && $prefix3 <= 689)
+        ) {
             return 'mtn';
-        } elseif (in_array($code, ['690', '691', '692', '693', '694', '695', '696', '697'])) {
+        }
+
+        // Orange Cameroon
+        if ($prefix3 >= 690 && $prefix3 <= 699) {
             return 'orange';
         }
 
