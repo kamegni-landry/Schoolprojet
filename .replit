@@ -4,3 +4,6 @@ entrypoint = "public/index.php"
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "composer install --no-interaction --prefer-dist && cp .env.replit .env && mkdir -p database && touch database/database.sqlite && php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 3000"]
+
+[agent]
+expertMode = true
