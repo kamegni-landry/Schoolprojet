@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Paramètres</title><link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>🌿 DoualaClean</h1>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="signalement.html">Signaler</a>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </nav>
+</header>
+<div class="settings-wrap">
+  <h2 style="color:#2e7d32;margin:28px 0 18px">⚙️ Paramètres du profil</h2>
+
+  <div class="settings-section">
+    <h3>👤 Informations personnelles</h3>
+    <label>Nom complet</label>
+    <input type="text" id="nomUser" placeholder="Votre nom">
+    <label>Téléphone</label>
+    <input type="tel" id="phoneUser" placeholder="6XXXXXXXX">
+    <button class="btn btn-primary" onclick="saveProfile()">Enregistrer</button>
+  </div>
+
+  <div class="settings-section">
+    <h3>🔒 Changer le mot de passe</h3>
+    <label>Mot de passe actuel</label>
+    <input type="password" id="currentPwd" placeholder="Mot de passe actuel">
+    <label>Nouveau mot de passe</label>
+    <input type="password" id="newPwd" placeholder="Minimum 6 caractères">
+    <label>Confirmer le nouveau</label>
+    <input type="password" id="confirmPwd" placeholder="Répétez le nouveau mot de passe">
+    <button class="btn btn-primary" onclick="changePassword()">Modifier le mot de passe</button>
+  </div>
+
+  <div class="settings-section" style="border-left:4px solid #c62828">
+    <h3 style="color:#c62828">🚪 Déconnexion</h3>
+    <button class="btn btn-red" onclick="doLogout()">Se déconnecter</button>
+  </div>
+</div>
+<script src="js/app.js"></script>
+</body></html>

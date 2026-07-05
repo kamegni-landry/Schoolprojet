@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DoualaClean — Statistiques</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>🌿 DoualaClean</h1>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="signalement.html">Signaler</a>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </nav>
+</header>
+<div class="dash-main" style="max-width:1000px;margin:0 auto">
+  <h2 style="color:#2e7d32;margin-bottom:24px;margin-top:24px">📈 Statistiques globales</h2>
+  <div class="stats-grid">
+    <div class="stat-card">        <h3>Total</h3>      <div class="val" id="statTotal">—</div></div>
+    <div class="stat-card orange"> <h3>En attente</h3> <div class="val" id="statAttente">—</div></div>
+    <div class="stat-card blue">   <h3>En cours</h3>   <div class="val" id="statCours">—</div></div>
+    <div class="stat-card">        <h3>Traités</h3>    <div class="val" id="statTraite">—</div></div>
+  </div>
+  <div class="charts-grid" style="margin-top:24px">
+    <div class="chart-box"><h3>Par statut</h3><canvas id="pieChart"></canvas></div>
+    <div class="chart-box"><h3>Par quartier</h3><canvas id="barChart"></canvas></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/app.js"></script>
+</body></html>

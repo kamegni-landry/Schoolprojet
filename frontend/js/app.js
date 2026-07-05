@@ -1,9 +1,8 @@
 /***********************************************
  * DOUALACLEAN — app.js
- * Backend: http://localhost:8000/api
- * Routes exactes du projet Laravel
+ * API routes relative (works on any host)
  ***********************************************/
-const API = 'http://localhost:8000/api';
+const API = '/api';
 
 /* ─── Helpers Storage ─── */
 const getToken = ()    => localStorage.getItem('dc_token');
@@ -150,7 +149,7 @@ async function doLogin(e) {
       else go('dashboard.html');
     }, 700);
   } catch {
-    errEl.textContent = '❌ Serveur inaccessible. Vérifiez que Laravel tourne sur le port 8000.';
+    errEl.textContent = '❌ Serveur inaccessible. Veuillez réessayer.';
     errEl.style.display = 'block';
     btn.innerHTML = 'Se connecter'; btn.disabled = false;
   }

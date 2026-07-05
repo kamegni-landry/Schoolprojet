@@ -1,9 +1,38 @@
 run = "composer install --no-interaction --prefer-dist && cp .env.replit .env && mkdir -p database && touch database/database.sqlite && php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 3000"
 entrypoint = "public/index.php"
+modules = ["php-8.2"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "composer install --no-interaction --prefer-dist && cp .env.replit .env && mkdir -p database && touch database/database.sqlite && php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 3000"]
+run = ["bash", "-c", "composer install --no-interaction --prefer-dist && cp .env.replit .env && mkdir -p database && touch database/database.sqlite && mkdir -p storage/framework/sessions storage/framework/cache/data storage/framework/testing storage/logs && chmod -R 775 storage/ && php artisan migrate --force && php artisan storage:link --force 2>/dev/null; cp -r frontend/. public/ && php artisan serve --host 0.0.0.0 --port 5000"]
 
 [agent]
 expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c 'composer install --no-interaction --prefer-dist && cp .env.replit .env && mkdir -p database && touch database/database.sqlite && mkdir -p storage/framework/sessions storage/framework/cache/data storage/framework/testing storage/logs && chmod -R 775 storage/ && php artisan migrate --force && php artisan storage:link --force 2>/dev/null; cp -r frontend/. public/ && php artisan serve --host 0.0.0.0 --port 5000'"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
