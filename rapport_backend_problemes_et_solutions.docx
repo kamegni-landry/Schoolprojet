@@ -1,0 +1,122 @@
+Rapport – Problèmes backend rencontrés + solutions proposées (DoualaClean)
+
+1) Problème : Incohérence du champ photo retourné par l’API
+- Symptôme : SignalementController@store enregistre le chemin en colonne ‘photo’, mais le formatter renvoie ‘photo_url’.
+- Risque : l’UI ne retrouve pas l’image (photo_url = null).
+- Solution :
+  a) Vérifier le modèle Signalement.php (accessor photo_url) et/ou la migration.
+  b) Standardiser : soit renvoyer ‘photo’ (et construire l’URL côté frontend), soit créer un accessor ‘getPhotoUrlAttribute()’.
+  c) Exemple attendu :
+     - si colonne photo = chemin relatif (ex: signalements/xxx.jpg)
+     - accessor : Storage::disk('public')->url($this->photo)
+
+2) Problème : Incohérence des valeurs de statut Signalement (USSD vs API)
+- Symptôme :
+  - store() : ‘En attente’, ‘En cours’, ‘Traité’
+  - USSDController : crée ‘en_attente’
+  - stats() et changerStatut() attendent les valeurs ‘En attente’, ‘En cours’, ‘Traité’.
+- Risque : les signalements créés par USSD ne seront pas visibles dans les stats / ni modifiables correctement.
+- Solution :
+  a) Unifier strictement un seul format de statut partout.
+  b) Option recommandée : utiliser les mêmes libellés ‘En attente’, ‘En cours’, ‘Traité’.
+  c) Mettre à jour USSDController :
+     - remplacer ‘en_attente’ par ‘En attente’
+  d) Mettre à jour aussi les valeurs à la création (et éventuellement la validation).
+
+3) Problème : USSDController crée des signalements avec champs potentiellement non compatibles
+- Symptôme : création USSD utilise : code_unique, ussd_session_id, phone_number, origine…
+  alors que SignalementController utilise : user_id, lieu, description, type_dechet, quartier, latitude/longitude, agent_id, traite_at…
+- Risque :
+  - erreurs SQL si colonnes inexistantes
+  - données inexploitables si colonnes existent mais ne sont pas celles utilisées par l’API.
+- Solution :
+  a) Vérifier la migration database/migrations/*_create_signalements_table.php et le modèle Signalement.php.
+  b) Aligner le schéma :
+     - si on veut un signalement USSD, remplir les champs attendus par l’API : user_id, lieu, quartier, type_dechet, description, statut, origine.
+  c) Ajouter/ajuster les migrations et/ou fillable dans le modèle si nécessaire.
+
+4) Problème : Flow USSD ramassage bloque/donne des incohérences car USSDSession ne contient pas user_id
+- Symptôme :
+  - USSDSession est créée avec session_id, phone_number, current_step, status, expires_at.
+  - Mais plus tard Ramassage::where('user_id', $session->user_id)
+  - et création Ramassage::create(['user_id' => $session->user_id ...])
+- Risque :
+  - user_id = NULL => erreurs ou ramassage non lié à l’utilisateur
+  - impossibilité de détecter “déjà un service actif”.
+- Solution :
+  a) Lors de la création de session, récupérer l’utilisateur correspondant au phone_number et stocker user_id.
+  b) Ou à défaut : dans le flow ramassage, chercher User::where('phone', $session->phone_number)->first() pour déterminer user_id.
+  c) Puis utiliser ce user_id dans les requêtes Ramassage.
+
+5) Problème : USSDController enregistre current_step avec la valeur de saisie utilisateur (bug logique)
+- Symptôme : à la fin de menu(), current_step est mis à ‘$text’ (ex: “1”, “Akwa”, “670000000”).
+- Risque : diagnostic compliqué, logique fragile si on s’appuie sur current_step.
+- Solution :
+  a) current_step doit être un état contrôlé (ex: ‘menu’, ‘quartier’, ‘type’, ‘ramassage_adresse’, ‘ramassage_desc’, ‘ramassage_phone’).
+  b) Mettre à jour update(['current_step' => ...]) avec les états, pas avec la saisie brute.
+  c) Garder $session->data pour la donnée utilisateur (quartier, frequence, etc.).
+
+6) Problème : validation/regex trop permissive pour “adresse” en USSD
+- Symptôme : preg_match('/^[0-9A-Za-z].*/', $text) accepte presque tout dès que ça commence par un alphanumérique.
+- Risque : entrées absurdes stockées, flow incohérent.
+- Solution :
+  a) Imposer des bornes (longueur max, pattern plus strict si possible).
+  b) Ex: valider min longueur, refuser caractères inattendus, etc.
+  c) Exemple : ‘adresse’ length 5-200 et autoriser seulement lettres/chiffres/espaces ponctuation limitée.
+
+7) Problème : Incohérence des statuts Transaction (USSD webhook vs simulation)
+- Symptôme :
+  - USSD paymentCallback : status ‘completed’ et ‘failed’ en appel createTransaction, mais provider peut envoyer ‘Success’/‘Failed’.
+  - Simulation/MobileMoneySimulator : utilise ‘completed’ côté Transaction, et fait aussi un mapping interne.
+- Risque :
+  - UI/clients peuvent s’attendre à un ensemble de statuts différent.
+- Solution :
+  a) Définir un enum unique des statuts Transaction (ex: pending/completed/failed).
+  b) Mettre en place un mapping unique :
+     - ‘Success’ => completed
+     - ‘Failed’ => failed
+  c) Harmoniser les champs : status et transaction_data.
+
+8) Problème : incohérence durée d’abonnement basique entre flows (AbonnementController vs MobileMoneySimulator)
+- Symptôme :
+  - AbonnementController (choisirPlan) : date_fin = null pour ‘basique’.
+  - MobileMoneySimulator : ‘basique’ => 30 jours.
+- Risque : basique a une durée différente selon le parcours (API vs simulation USSD).
+- Solution :
+  a) Décider la règle métier.
+  b) Si ‘basique’ = gratuit à durée illimitée : alors MobileMoneySimulator doit aussi créer date_fin = null.
+  c) Si basique = période d’essai : alors AbonnementController doit aussi set date_fin.
+
+9) Problème : activateSubscription ne met pas forcément à jour users.abonnement (désynchronisation)
+- Symptôme : MobileMoneySimulator@activateSubscription crée Abonnement en table abonnements, mais ne met pas le champ ‘abonnement’ sur users (contrairement à AbonnementController@choisirPlan).
+- Risque : l’utilisateur peut avoir un abonnement actif en DB, mais ‘users.abonnement’ peut rester ancien.
+- Solution :
+  a) Après création de l’abonnement, mettre à jour $user->update(['abonnement' => $plan]).
+  b) Ou supprimer l’usage du champ users.abonnement si l’application s’appuie uniquement sur la relation abonnementActif.
+
+10) Problème : routes API possibles manquantes / méthode non trouvée (RamassageController)
+- Symptôme : routes/api.php référence RamassageController::monService et RamassageController::index, mais on n’a pas validé le contenu du contrôleur.
+- Risque : 404/erreurs serveur.
+- Solution :
+  a) Vérifier l’implémentation de RamassageController.php : existence de monService(), index(), store(), annuler().
+  b) Vérifier les signatures et noms de méthode.
+  c) Corriger les routes si besoin.
+
+11) Problème : manque de logs et traçabilité côté USSD (hors paymentCallback)
+- Symptôme : seules des logs existent dans paymentCallback.
+- Risque : difficulté à diagnostiquer les échecs USSD (session, création signalement/ramassage).
+- Solution :
+  a) Ajouter Log::info/Log::warning lors de : création session, transitions current_step, création signalement, création ramassage.
+  b) Ajouter try/catch autour des créations DB pour renvoyer ‘END’ propre en USSD.
+
+---
+Résumé Exécutif
+- Les plus gros bugs d’intégration identifiés :
+  1) Incohérence des statuts Signalement (‘En attente’ vs ‘en_attente’)
+  2) Alignement schéma Signalement entre USSD et le reste du backend
+  3) USSD ramassage : user_id absent dans USSDSession (liens utilisateur cassés)
+  4) photo_url vs photo (incohérence de réponse API)
+  5) désynchronisation users.abonnement vs Abonnement créé par simulateur
+
+- Ce rapport propose pour chaque point une stratégie de correction : unification des enums, alignement du schéma, remplissage correct des champs, harmonisation durée d’abonnement, amélioration logs.
+

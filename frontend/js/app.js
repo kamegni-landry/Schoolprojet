@@ -166,7 +166,14 @@ async function doRegister(e) {
     password:              document.getElementById('password').value,
     password_confirmation: document.getElementById('password_confirmation').value,
     phone:                 document.getElementById('phone')?.value.trim() || null,
+    role:                  document.getElementById('role')?.value.trim(),
   };
+
+  if (!body.role) {
+    errEl.textContent = 'Veuillez sélectionner un rôle';
+    errEl.style.display = 'block';
+    return;
+  }
 
   const btn = e.target.querySelector('button[type=submit]');
   btn.innerHTML = '<span class="loading"></span>'; btn.disabled = true;
@@ -188,7 +195,15 @@ async function doRegister(e) {
     }
     setAuth(data.token, data.user);
     toast('Inscription réussie ! Bienvenue 🎉');
-    setTimeout(() => go('signalement.html'), 900);
+    
+    // Redirection en fonction du rôle
+    const redirectUrl = data.user.role === 'citoyen' 
+      ? 'signalement.html' 
+      : data.user.role === 'agent'
+      ? 'dashboard.html'
+      : 'dashboard.html'; // admin
+    
+    setTimeout(() => go(redirectUrl), 900);
   } catch {
     errEl.textContent = '❌ Serveur inaccessible.';
     errEl.style.display = 'block';
@@ -228,6 +243,23 @@ async function initSignalement() {
   const form = document.getElementById('signalForm');
   if (!form) return;
 
+  // Gestion de l'affichage du champ de saisie pour "Autre"
+  const quartierSelect = document.getElementById('quartier');
+  const quartierAutreInput = document.getElementById('quartier_autre');
+  
+  if (quartierSelect && quartierAutreInput) {
+    quartierSelect.addEventListener('change', () => {
+      if (quartierSelect.value === 'autre') {
+        quartierAutreInput.style.display = 'block';
+        quartierAutreInput.required = true;
+      } else {
+        quartierAutreInput.style.display = 'none';
+        quartierAutreInput.required = false;
+        quartierAutreInput.value = '';
+      }
+    });
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = form.querySelector('button[type=submit]');
@@ -237,7 +269,20 @@ async function initSignalement() {
     fd.append('lieu',        document.getElementById('lieu').value);
     fd.append('description', document.getElementById('description').value);
     fd.append('type_dechet', document.getElementById('type_dechet').value);
-    fd.append('quartier',    document.getElementById('quartier').value);
+    
+    // Gestion du quartier (choix ou saisie personnalisée)
+    const quartierSelect = document.getElementById('quartier');
+    let quartierValue = quartierSelect.value;
+    if (quartierValue === 'autre') {
+      quartierValue = document.getElementById('quartier_autre').value;
+      if (!quartierValue.trim()) {
+        toast('Veuillez préciser votre quartier', 'error');
+        btn.innerHTML = '📤 Envoyer'; btn.disabled = false;
+        return;
+      }
+    }
+    fd.append('quartier', quartierValue);
+    
     const photo = document.getElementById('photo').files[0];
     if (photo) fd.append('photo', photo);
 

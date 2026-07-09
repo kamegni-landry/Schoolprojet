@@ -35,7 +35,7 @@ class AuthController extends BaseController
 
     /**
      * POST /api/auth/register
-     * Inscription d'un nouveau citoyen
+     * Inscription d'un nouveau citoyen, agent ou admin
      */
     public function register(Request $request): JsonResponse
     {
@@ -44,6 +44,7 @@ class AuthController extends BaseController
             'email'    => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', Password::min(6)],
             'phone'    => 'nullable|string|max:20',
+            'role'     => 'required|in:citoyen,agent,admin',
         ]);
 
         $user = User::create([
@@ -51,7 +52,7 @@ class AuthController extends BaseController
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone'    => $validated['phone'] ?? null,
-            'role'     => 'citoyen',
+            'role'     => $validated['role'],
             'abonnement' => 'basique',
         ]);
 
